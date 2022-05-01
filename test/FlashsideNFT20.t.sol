@@ -78,7 +78,7 @@ contract FlashsideNFT20Test is Test {
     }
 
     // Setup before land balance
-    uint256 landBalanceBefore = LAND.balanceOf(address(this));
+    uint256 landBalanceBefore = LAND.balanceOf(address(FLASHSIDE));
 
     // Setup flashloan params
     uint256[] memory _ids = new uint256[](1);
@@ -89,11 +89,8 @@ contract FlashsideNFT20Test is Test {
     // Execute flashloan
     BAYC20.flashLoan(_ids, _amounts, address(FLASHSIDE), "");
 
-    // Withdraw land tokens
-    FLASHSIDE.withdrawLand(_ids);
-
     // Setup after land balance
-    uint256 landBalanceAfter = LAND.balanceOf(address(this));
+    uint256 landBalanceAfter = LAND.balanceOf(address(FLASHSIDE));
 
     // Check for balance increment
     assertEq(landBalanceBefore + 1, landBalanceAfter);
