@@ -313,7 +313,7 @@ contract FlashsideLooksRare {
   /// @notice Withdraws contract ETH balance to owner address
   function withdrawBalance() external {
     (bool sent, ) = OWNER.call{value: address(this).balance}("");
-    if (!sent) revert("Count not withdraw balance");
+    if (!sent) revert("Could not withdraw balance");
   }
 
   /// @notice Withdraw contract WETH balance to owner address

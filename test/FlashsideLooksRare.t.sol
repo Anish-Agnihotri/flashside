@@ -27,6 +27,8 @@ contract FlashsideLooksRareTest is Test {
 
   /// @notice Cheatcodes
   Vm public VM;
+  /// @notice Wrapped Ether contract
+  IWETH public WETH;
   /// @notice Land contract
   OthersideLandExtended public LAND;
   /// @notice FlashsideLooksRare contract
@@ -38,17 +40,67 @@ contract FlashsideLooksRareTest is Test {
   function setUp() public {
     // Setup cheatcodes
     VM = Vm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
+    // Setup WETH
+    WETH = IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     // Setup Otherside land contract
     LAND = OthersideLandExtended(0x34d85c9CDeB23FA97cb08333b511ac86E1C4E258);
     // Initialize FlashsideLooksRare
     FLASHSIDE = new FlashsideLooksRare(
-      0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2, // Wrapped Ether
+      address(WETH), // Wrapped Ether
       address(LAND), // Otherside land
       0x60E4d786628Fea6478F785A6d7e704777c86a7c6, // MAYC
       0xf42aa99F011A1fA7CDA90E5E98b277E306BcA83e, // MAYC transfer manager
       0x59728544B08AB483533076417FbBB2fD0B17CE3a, // LooksRare exchange
       0x1E0447b19BB6EcFdAe1e4AE1694b0C3659614e4e // dYdX Solo Margin
     );
+  }
+
+  /// @notice Test claiming excess ETH
+  function testClaimExcessETH() public {
+    // Enforce flashside contract starts with 0 balance
+    VM.deal(address(FLASHSIDE), 0);
+
+    // Collect balance before
+    uint256 balanceBefore = address(this).balance;
+
+    // Send 5 ETH to contract
+    payable(FLASHSIDE).transfer(5 ether);
+
+    // Assert balance now 5 less
+    assertEq(address(this).balance, balanceBefore - 5 ether);
+
+    // Withdraw 5 ETH
+    FLASHSIDE.withdrawBalance();
+
+    // Collect balance after
+    uint256 balanceAfter = address(this).balance;
+
+    // Assert balance matches
+    assertEq(balanceAfter, balanceBefore);
+  }
+
+  /// @notice Test claiming excess WETH
+  function testClaimExcessWETH() public {
+    // Deposit 5 ETH to WETH
+    WETH.deposit{value: 5 ether}();
+
+    // Collect balance before
+    uint256 balanceBefore = WETH.balanceOf(address(this));
+
+    // Send 5 WETH to contract
+    WETH.transferFrom(address(this), address(FLASHSIDE), 5 ether);
+
+    // Assert balance now 0
+    assertEq(WETH.balanceOf(address(this)), 0);
+
+    // Withdraw 5 WETH
+    FLASHSIDE.withdrawBalanceWETH();
+
+    // Collect balance after
+    uint256 balanceAfter = WETH.balanceOf(address(this));
+
+    // Assert balance matches
+    assertEq(balanceBefore, balanceAfter);
   }
 
   /// @notice Test claiming land when claimable is toggled true
@@ -191,4 +243,7 @@ contract FlashsideLooksRareTest is Test {
     // Execute flash loan
     FLASHSIDE.initiateFlashloan(purchaseOrder, sellOrder);
   }
+
+  /// @notice Allows receiving ETH
+  receive() external payable {}
 }
