@@ -28,6 +28,8 @@ forge update
 forge test --fork-url=YOUR_MAINNET_RPC_URL
 ```
 
+**Note:** Tests for `FlashsideLooksRare` currently require manual entry of test orders in `test/FlashsideLooksRare.t.sol`. In the future, this should be ingested via [Forge FFI](https://github.com/foundry-rs/foundry/blob/3f13a986e69c18ea19ce634fea00f4df6b3666b0/testdata/cheats/Ffi.t.sol) + [LooksRare API](https://looksrare.github.io/api-docs/#/Orders/OrderController.getOrders).
+
 ## Credits
 
 - [@sinasab](https://github.com/sinasab) for alerting me of opportunity + nerd-sniping.

@@ -180,11 +180,6 @@ contract FlashsideLooksRare {
     OrderTypes.MakerOrder calldata purchaseOrder,
     OrderTypes.MakerOrder calldata saleOrder
   ) external {
-    // Check if contract has sufficient balance
-    uint256 requiredBalance = purchaseOrder.price - saleOrder.price + 2 wei;
-    // If insufficinet balance, revert
-    //if (address(this).balance < requiredBalance) revert("Insufficient funds");
-
     // Check if land claim is claimable
     bool landClaimActive = LAND.claimableActive();
     // If claim not active, revert

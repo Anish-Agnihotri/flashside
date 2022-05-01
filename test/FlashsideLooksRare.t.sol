@@ -121,12 +121,74 @@ contract FlashsideLooksRareTest is Test {
     payable(address(FLASHSIDE)).transfer(landCost + 2 wei);
 
     // Execute flash loan
-    FLASHSIDE.initiateFlashloan(purchaseOrder,sellOrder);
+    FLASHSIDE.initiateFlashloan(purchaseOrder, sellOrder);
 
     // Setup after land balance
     uint256 landBalanceAfter = LAND.balanceOf(address(FLASHSIDE));
 
     // Check for balance increment
     assertEq(landBalanceBefore + 1, landBalanceAfter);
+  }
+
+  /// @notice Test claiming land when claimable is toggled false
+  function testClaimLandNotClaimable() public {
+    // Get claimable status
+    bool isClaimable = LAND.claimableActive();
+    // Toggle claimable to false
+    if (isClaimable) {
+      // Get contract operator
+      address landOperator = LAND.operator();
+      // Mock operator for next call
+      VM.prank(landOperator);
+      // Flip claimable state to false
+      LAND.flipClaimableState();
+    }
+
+    // Setup purchase order
+    // Details from LooksRare API (https://looksrare.github.io/api-docs/#/Orders/OrderController.getOrders)
+    OrderTypes.MakerOrder memory purchaseOrder = OrderTypes.MakerOrder({
+      isOrderAsk: true,
+      signer: 0x20C3cc9E8869ADc1B7efAd187f10969A449653F5,
+      collection: 0x60E4d786628Fea6478F785A6d7e704777c86a7c6,
+      price: 44900000000000000000,
+      tokenId: 24136,
+      amount: 1,
+      strategy: 0x56244Bb70CbD3EA9Dc8007399F61dFC065190031,
+      currency: 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,
+      nonce: 144,
+      startTime: 1651219901,
+      endTime: 1653811870,
+      minPercentageToAsk: 8500,
+      params: "",
+      v: 28,
+      r: 0x98e8f39977eed65a7420fdaf6fd8a244ce9f0f8b037d3f34c1ea652c0e5e9d71,
+      s: 0x1257c9558d7099ad5681643d100db5a1ccda47dbaa5dd28125f556933f071313
+    });
+
+    // Setup sale order
+    // Details from LooksRare API (https://looksrare.github.io/api-docs/#/Orders/OrderController.getOrders)
+    OrderTypes.MakerOrder memory sellOrder = OrderTypes.MakerOrder({
+      isOrderAsk: false,
+      signer: 0x9A968a4E20612cD26f09246358316eFfc19219E5,
+      collection: 0x60E4d786628Fea6478F785A6d7e704777c86a7c6,
+      price: 31990000000000000000,
+      tokenId: 0,
+      amount: 1,
+      strategy: 0x86F909F70813CdB1Bc733f4D97Dc6b03B8e7E8F3,
+      currency: 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,
+      nonce: 8,
+      startTime: 1651358759,
+      endTime: 1651445153,
+      minPercentageToAsk: 8500,
+      params: "",
+      v: 28,
+      r: 0x71104a9867777d84929c1565b8b280775bc35a76339d2908227799f1752635fc,
+      s: 0x3eeb1e56af51e5ed3491ff082ad90ac1b8fd95e2d0879930354fa11e57144efc
+    });
+
+    // Setup expected revert
+    VM.expectRevert("Land claim not active");
+    // Execute flash loan
+    FLASHSIDE.initiateFlashloan(purchaseOrder, sellOrder);
   }
 }
